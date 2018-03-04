@@ -14,7 +14,8 @@
 
 //URIs of the different webservices
 #define URI_IMAGE @"http://openweathermap.org/img/w/"
-#define URI_WEATHER_FOR_CITY @"http://api.openweathermap.org/data/2.5/weather?q="
+#define URI_WEATHER_FOR_CITY @"https://api.openweathermap.org/data/2.5/weather?q="
+#define API_KEY @"470f269746d885cea200e3a68974ce34"
 
 
 @interface WebservicesManager()
@@ -62,11 +63,11 @@
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]cachePolicy:NSURLRequestReloadIgnoringLocalAndRemoteCacheData timeoutInterval:20.0f];
 
     [[SPNetworkActivityManager shared] addDownloadInProgress];
-    [[UIApplication sharedApplication]setNetworkActivityIndicatorVisible:TRUE];
+    
     
     NSURLResponse* response = nil;
     NSError* error = nil;
-    #define MAX_DOWNLOAD_ATTEMPT 4
+    #define MAX_DOWNLOAD_ATTEMPT 1
     for (int i=0; i<MAX_DOWNLOAD_ATTEMPT; i++)
     {
         NSData* data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
@@ -76,7 +77,7 @@
                   NSLog(@"Error:try to have an answer of the server without success.Request sent again! (%@)", error);
             else
             {
-                NSLog(@"try 3 times to have an answer of the server without success (%@)", error);
+                NSLog(@"try %d times to have an answer of the server without success (%@)",MAX_DOWNLOAD_ATTEMPT, error);
                 [self postNotification:[url stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
                
             }
@@ -194,7 +195,7 @@
     NSMutableString *lastCallOfAWebService;
     switch (type) {
         case kWebServiceTypeWeatherByCity:
-            lastCallOfAWebService=[NSMutableString stringWithFormat:@"%@%@",URI_WEATHER_FOR_CITY,parameter];
+            lastCallOfAWebService=[NSMutableString stringWithFormat:@"%@%@&APPID=%@",URI_WEATHER_FOR_CITY,parameter,API_KEY];
             break;
         case kWebServiceTypeWeatherIcon:
             lastCallOfAWebService=[NSMutableString stringWithFormat:@"%@%@.png",URI_IMAGE,parameter];
