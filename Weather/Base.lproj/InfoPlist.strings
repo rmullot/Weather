@@ -1,2 +1,2 @@
 /* Localized versions of Info.plist keys */
-
+"warning" = "Be careful, this application use a free account to call https://home.openweathermap.org/, I reduce the number of recalls to the api in the code (if the first one failed) to zero to be sure that I will not be put on a blacklist. Try to call the api after 10 minutes if you want to test again\n\nIf account exceeds the limits, then a notification about limits exceeding is sent. If it repeats again, then the account is blocked for an hour. Therefore, the lock period is increased by one hour until 4 hours block sets. When blocking repeats the fifth time, then the lock period lasts 24 hours. This rule is cycled. Please be carefull with the number of API calls you complete. ";

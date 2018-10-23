@@ -47,19 +47,45 @@
 -(void)refreshForecast
 {
     NSURL *urlImage=[NSURL URLWithString:[[WebservicesManager sharedInstance]getURLWebServiceOf:kWebServiceTypeWeatherIcon withParameter:[ForecastManager sharedInstance].currentForecast.idImageWeather]];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:urlImage];
-    [NSURLConnection sendAsynchronousRequest:request
-                                       queue:[NSOperationQueue mainQueue]
-                           completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
-                               if ( !error )
-                               {
-                                   UIImage *image = [[UIImage alloc] initWithData:data];
-                                   self.forecastImage.image=image;
-                               } else{
-                                   NSLog(@"Error:%@",error.description);
-                               }
-                           }];
     
+    
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:urlImage];
+    
+    void (^completionHandler)(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) = ^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error)
+    {
+        if ( !error )
+        {
+            UIImage *image = [[UIImage alloc] initWithData:data];
+            UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale);
+            [image drawAtPoint:CGPointZero];
+            UIImage * decodedImage = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+            
+            __weak typeof(self) weakSelf = self;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Run UI Updates
+                typeof(self) strongSelf = weakSelf;
+                if (strongSelf) {
+                    strongSelf.forecastImage.image = decodedImage;
+                }
+            });
+        } else{
+            NSLog(@"Error:%@",error.description);
+        }
+    };
+    
+    if (@available(iOS 9, *)) {
+        [[[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            completionHandler(data,response,error);
+        }] resume];
+    } else {
+        [NSURLConnection sendAsynchronousRequest:request
+                                           queue:[NSOperationQueue mainQueue]
+                               completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
+                                   completionHandler(data,response,error);
+                               }];
+        
+    }
     self.forecastLabel.text=[[ForecastManager sharedInstance].currentForecast description];
 }
 @end
